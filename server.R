@@ -26,7 +26,7 @@ shinyServer(function(input, output, session) {
 # Code to load required files ---------------------------------------------
 
 
-  us <<- readOGR("data/us.geojson", "OGRGeoJSON")
+  us <<- readOGR("data/us_geojson", "OGRGeoJSON")
   #Restrict to mainland US not alaska and stuff
   us <- us[!us$STATEFP %in% c("02", "15", "72"),]
 
@@ -63,20 +63,26 @@ shinyServer(function(input, output, session) {
     #Set new progress
     progress$set(message="Creating map", value=0.5)
 
-    if(input$selector == 1 ){
+    if(input$selector == 1 ){ #Average mortgage interest deduction
       #Create a color pallete
       ramp <- colorRampPalette(c("white", brewer.pal(n=9, name="YlOrRd")), space="Lab")
 
       #This is the variable under consideration
       droughts$total <- with(droughts, (as.integer((A19300/N19300 ))))
-    }
-    else if(input$selector == 2 ){
+    }    else if(input$selector == 2 ){  #capital gains
       #Use a different color pallete
       ramp <- colorRampPalette(c("white", brewer.pal(n=9, name="BuPu")), space="Lab")
 
 
+      droughts$total <- with(droughts, (as.integer(( A01000/N01000 ))))
+    }    else if(input$selector == 3 ){ #Unemployment compensation
+      #Use a different color pallete
+      ramp <- colorRampPalette(c("white", brewer.pal(n=9, name="BuGn")), space="Lab")
+
+
       droughts$total <- with(droughts, (as.integer(( A02300/N02300 ))))
     }
+
 
 
     #Merge the map and the data
