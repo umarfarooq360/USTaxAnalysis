@@ -24,36 +24,40 @@ shinyServer(function(input, output, session) {
 
 
 # Code to load required files ---------------------------------------------
+  load("tmpData.Rdata")
+  if(!exists("droughts") ){
+    print("Reading data");
+    us <- readOGR("data/us_geojson", "OGRGeoJSON")
+    #Restrict to mainland US not alaska and stuff
+    us <- us[!us$STATEFP %in% c("02", "15", "72"),]
 
+    us_aea <- spTransform(us, CRS("+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs"))
 
-  us <<- readOGR("data/us_geojson", "OGRGeoJSON")
-  #Restrict to mainland US not alaska and stuff
-  us <- us[!us$STATEFP %in% c("02", "15", "72"),]
+    map <- ggplot2::fortify(us_aea, region="GEOID")
 
-  us_aea <- spTransform(us, CRS("+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs"))
+    #Read the data
+    droughts <- read.csv("data/12cyallagi.csv")
 
-  map <<- ggplot2::fortify(us_aea, region="GEOID")
+    #Remove the totals for state data
+    droughts <- droughts[!(droughts$COUNTYFIPS == 0),];
 
-  #Read the data
-  droughts <<- read.csv("data/12cyallagi.csv")
+    #Aggregating the data to remove agi brackets for county
+    droughts =  aggregate( . ~ COUNTYFIPS+COUNTYNAME+STATE+STATEFIPS, droughts, FUN=sum)
 
-  #Remove the totals for state data
-  droughts <- droughts[!(droughts$COUNTYFIPS == 0),];
+    #Create standard five digit IDs for plotting states
+    droughts$id <- paste(sprintf("%02d%03d", as.numeric(as.character(droughts$STATEFIPS)),as.numeric(as.character(droughts$COUNTYFIPS)) )  );
 
-  #Aggregating the data to remove agi brackets for county
-  droughts =  aggregate( . ~ COUNTYFIPS+COUNTYNAME+STATE+STATEFIPS, droughts, FUN=sum)
+    #Create a color pallete
+    ramp <- colorRampPalette(c("white", brewer.pal(n=9, name="YlOrRd")), space="Lab")
 
-  #Create standard five digit IDs for plotting states
-  droughts$id <- paste(sprintf("%02d%03d", as.numeric(as.character(droughts$STATEFIPS)),as.numeric(as.character(droughts$COUNTYFIPS)) )  );
+    #This is the variable under consideration
+    droughts$total <- with(droughts, (as.integer((N1))))
 
-  #Create a color pallete
-  ramp <- colorRampPalette(c("white", brewer.pal(n=9, name="YlOrRd")), space="Lab")
+    #Save the data
+    print("Saving variables");
+    save("droughts","ramp","map","doesDataExist", file="tmpData.Rdata");
 
-
-
-  #This is the variable under consideration
-  droughts$total <- with(droughts, (as.integer((N1))))
-
+  }
   #This is the function that generates unique plots -------------------------------
   #-------------------------------------------------------------------------------
 
