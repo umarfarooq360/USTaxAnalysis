@@ -91,7 +91,11 @@ shinyServer(function(input, output, session) {
 
 
     #Break data into 10 percentiles and see what value falls into which category. Then fill colors accordingly
-    data_chunks <- quantile(map_d$total,seq(0,1,0.2),na.rm=T )
+    data_chunks <- quantile(map_d$total,seq(0,1,0.1),na.rm=T )
+    #Remove duplicates
+    data_chunks <- data_chunks[!duplicated(data_chunks )]
+
+    #Create color assignments to states
     map_d$fill_col <- as.character(cut(map_d$total, data_chunks , include.lowest=TRUE, labels=ramp(length(data_chunks)-1)))
     map_d$fill_col <- ifelse(is.na(map_d$fill_col), "#FFFFFF", map_d$fill_col)
 
