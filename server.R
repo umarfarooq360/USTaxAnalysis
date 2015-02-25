@@ -64,6 +64,21 @@ shinyServer(function(input, output, session) {
   output$txtOut <-renderUI({
 
 
+    if(file.exists(paste("plot", input$selector,".Rdata" ,sep='')))
+    {
+      print("Loading old plot ");
+      load(paste("plot", input$selector,".Rdata" ,sep=''));
+    }
+
+    if(exists("whichPlotsSaved")  ){
+      if( (input$selector %in% whichPlotsSaved)){
+        print("found plot ")
+
+        #Figure out how to pre-load plots
+
+        }
+    }
+
     #Set new progress
     progress$set(message="Creating map", value=0.5)
 
@@ -129,17 +144,61 @@ shinyServer(function(input, output, session) {
     #Set new progress
     progress$set(message="Done!", value=0)
 
+    #Which plots were saved and will be preloaded
+    if(!exists("whichPlotsSaved" ) ){whichPlotsSaved = c(0 ,input$selector ) }
+    else{whichPlotsSaved= c(whichPlotsSaved, input$selector )}
+    save(map_d, whichPlotsSaved ,file=paste("plot",input$selector,".Rdata" ,sep=''))
+
     return(NULL);
   })
 
   output$map_plot <- renderUI({
-    print("Went there")
+    print("Rendered new plot")
     ggvisOutput("drought");
   })
 
+#--------------------------------
+#Stuff for the time series chart
+#--------------------------------
 
+# Provide explicit colors for regions, so they don't get recoded when the
+# different series happen to be ordered differently from year to year.
+timeData = read.csv("data/timeTaxData.csv")
 
+#Create a color pallete
+pallete <- colorRampPalette(c( brewer.pal(n=9, name="Set1")), space="Lab")
 
+defaultColors <- c("#3366cc", "#dc3912", "#ff9900", "#109618", "#990099", "#0099c6", "#dd4477")
+
+series <- structure(
+  lapply( pallete(3) , function(color) { list(color=color) }),
+  names = levels(timeData$Eclass)
+)
+
+yearData <- reactive({
+  # Filter to the desired year, and put the columns
+  # in the order that Google's Bubble Chart expects
+  # them (name, x, y, color, size). Also sort by region
+  # so that Google Charts orders and colors the regions
+  # consistently.
+  df <- timeData %>%
+    filter( Year == input$year ) %>%
+    select(Ybracket, AvTax, Deductions, Eclass, PerCapitaAGI)
+
+})
+
+output$income_time_chart <- reactive({
+  # Return the data and options
+  list(
+    data = googleDataTable(yearData()),
+    options = list(
+      title = sprintf(
+        "Income data with brackets, %s",
+        input$year),
+      series = series
+    )
+  )
+})
 
 
 
