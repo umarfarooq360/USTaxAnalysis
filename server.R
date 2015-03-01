@@ -183,7 +183,7 @@ yearData <- reactive({
   # consistently.
   df <- timeData %>%
     filter( Year == input$year ) %>%
-    select(Ybracket, AvTax, Deductions, Eclass, PerCapitaAGI)
+    select(Ybracket, AvTax, NumRet, Eclass, PerCapitaAGI)
 
 })
 

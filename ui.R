@@ -39,23 +39,24 @@ shinyUI(fluidPage(
              fontSize = 13,
              # Set axis labels and ranges
              hAxis = list(
-               title = "Income data Time Series"
-
+               title = "Average Tax Rate",
+                viewWindow = list(min=0 , max=32 )
              ),
              vAxis = list(
-               title = "Life expectancy (years)"
+               title = "Population"
+               ,viewWindow = list(min= -4000000 , max=20000000 )
 
              ),
              # The default padding is a little too spaced out
              chartArea = list(
-               top = 50, left = 75,
+               top = 50, left = 95,
                height = "75%", width = "75%"
              ),
              # Allow pan/zoom
              explorer = list(),
              # Set bubble visual props
              bubble = list(
-               opacity = 0.4, stroke = "none",
+               opacity = 0.6, stroke = "none",
                # Hide bubble label
                textStyle = list(
                  color = "none"
